@@ -1,96 +1,138 @@
 /* -----------------------------
-   Drag & Drop in Preview Area
+   Drag & Drop and Marquee Selection
 ------------------------------ */
 
 let dragState = null; 
-// Structure: { imgData, animIndex, el, startMouseX, startMouseY, startLeft, startTop, maxX, maxY }
+let marqueeState = null;
 
 previewArea.addEventListener('mousedown', (e) => {
-  const target = e.target;
-  if (!(target instanceof HTMLElement && target.classList.contains('preview'))) return;
-
-  const imgData = getImageDataById(target.id);
-  if (!imgData) return;
-  const animIndex = activeDragTarget.animIndex;
-
-  // Check lock state
-  if (animIndex === null && imgData.locked) return;
-  if (animIndex !== null && imgData.extraAnims[animIndex]?.locked) return;
-
-  const rectParent = previewArea.getBoundingClientRect();
-  const rectElem = target.getBoundingClientRect();
-
-  dragState = {
-    imgData,
-    animIndex: activeDragTarget.animIndex,
-    el: target,
-    startMouseX: e.clientX,
-    startMouseY: e.clientY,
-    startLeft: rectElem.left - rectParent.left,
-    startTop: rectElem.top - rectParent.top,
-    maxX: previewArea.clientWidth - target.offsetWidth,
-    maxY: previewArea.clientHeight - target.offsetHeight
-  };
-
-  document.addEventListener('mousemove', onDragMove);
-  document.addEventListener('mouseup', onDragEnd);
-  e.preventDefault();
+    if (e.target.closest('.preview, .preview-text')) {
+        handleElementDragStart(e);
+    } else {
+        if (selectionList.length > 0) {
+            selectionList = [];
+            renderLayers();
+            highlightPreview();
+            updateAlignmentToolbarVisibility();
+        }
+        handleMarqueeStart(e);
+    }
 });
 
-function onDragMove(e) {
-  if (!dragState) return;
-  const dx = e.clientX - dragState.startMouseX;
-  const dy = e.clientY - dragState.startMouseY;
-
-  let newLeft = dragState.startLeft + dx;
-  let newTop = dragState.startTop + dy;
-
-  // Snap to grid if enabled
-  if (document.getElementById('snapToGridToggle').checked) {
-    newLeft = snapToGrid(newLeft);
-    newTop = snapToGrid(newTop);
-  }
-
-  dragState.el.style.left = newLeft + 'px';
-  dragState.el.style.top = newTop + 'px';
+function handleElementDragStart(e) {
+    const target = e.target.closest('.preview, .preview-text');
+    const targetData = getImageDataById(target.id) || getTextDataById(target.id);
+    if (!targetData || targetData.isLocked) return;
+    const isTargetSelected = selectionList.some(item => item.id === targetData.id);
+    if (!isTargetSelected) {
+        selectionList = [targetData];
+        activeDragTarget = targetData.type === 'image'
+            ? { imgData: targetData, animIndex: null }
+            : { textData: targetData, animIndex: null };
+        renderLayers();
+        highlightPreview();
+    }
+    if (selectionList.some(item => item.isLocked)) { return; }
+    const rectParent = previewArea.getBoundingClientRect();
+    dragState = {
+        items: selectionList.map(item => {
+            const el = item.previewImg || item.previewElement;
+            if (!el) return null;
+            const rectElem = el.getBoundingClientRect();
+            return {
+                data: item,
+                el: el,
+                startLeft: rectElem.left - rectParent.left,
+                startTop: rectElem.top - rectParent.top
+            };
+        }).filter(Boolean),
+        startMouseX: e.clientX,
+        startMouseY: e.clientY
+    };
+    document.addEventListener('mousemove', onElementDragMove);
+    document.addEventListener('mouseup', onElementDragEnd);
+    e.preventDefault();
 }
 
-function onDragEnd() {
-  if (!dragState) return;
-  const { imgData, animIndex } = dragState;
-  const newX = parseInt(dragState.el.style.left) || 0;
-  const newY = parseInt(dragState.el.style.top) || 0;
+function onElementDragMove(e) {
+    if (!dragState) return;
+    const dx = e.clientX - dragState.startMouseX;
+    const dy = e.clientY - dragState.startMouseY;
+    dragState.items.forEach(item => {
+        let newLeft = item.startLeft + dx;
+        let newTop = item.startTop + dy;
+        if (document.getElementById('snapToGridToggle').checked) {
+            newLeft = snapToGrid(newLeft);
+            newTop = snapToGrid(newTop);
+        }
+        item.el.style.left = newLeft + 'px';
+        item.el.style.top = newTop + 'px';
+    });
+}
 
-  if (animIndex === null) {
-    imgData.x = newX;
-    imgData.y = newY;
-    const wrapper = imgData.wrapper;
-    wrapper.querySelector('.posX').value = imgData.x;
-    wrapper.querySelector('.posY').value = imgData.y;
-  } else {
-    const anim = imgData.extraAnims[animIndex];
-    if (!anim) return;
-
-    // Compute cumulative offset of previous animations
-    let cumulativeX = 0, cumulativeY = 0;
-    for (let i = 0; i < animIndex; i++) {
-      cumulativeX += imgData.extraAnims[i].x;
-      cumulativeY += imgData.extraAnims[i].y;
+function onElementDragEnd() {
+    if (!dragState) return;
+    const firstItem = dragState.items[0];
+    if (!firstItem) return;
+    const dx = parseInt(firstItem.el.style.left) - firstItem.startLeft;
+    const dy = parseInt(firstItem.el.style.top) - firstItem.startTop;
+    
+    if (dx !== 0 || dy !== 0) {
+        const movedElements = dragState.items.map(item => item.data);
+        history.do(new MoveCommand(movedElements, dx, dy));
+    } else {
+        updatePreviewAndCode();
     }
+    document.removeEventListener('mousemove', onElementDragMove);
+    document.removeEventListener('mouseup', onElementDragEnd);
+    dragState = null;
+}
 
-    anim.x = newX - imgData.x - cumulativeX;
-    anim.y = newY - imgData.y - cumulativeY;
+// --- MARQUEE SELECTION LOGIC ---
+function handleMarqueeStart(e) {
+    const rectParent = previewArea.getBoundingClientRect();
+    marqueeState = { startX: e.clientX - rectParent.left, startY: e.clientY - rectParent.top, box: document.createElement('div') };
+    marqueeState.box.className = 'marquee-box';
+    previewArea.appendChild(marqueeState.box);
+    document.addEventListener('mousemove', onMarqueeMove);
+    document.addEventListener('mouseup', onMarqueeEnd);
+}
 
-    const animDiv = imgData.wrapper
-      .querySelectorAll('.extra-anims .exit-controls')[animIndex];
-    if (animDiv) {
-      animDiv.querySelector('.animX').value = anim.x;
-      animDiv.querySelector('.animY').value = anim.y;
-    }
-  }
+function onMarqueeMove(e) {
+    if (!marqueeState) return;
+    const rectParent = previewArea.getBoundingClientRect();
+    const currentX = e.clientX - rectParent.left;
+    const currentY = e.clientY - rectParent.top;
+    const x = Math.min(marqueeState.startX, currentX);
+    const y = Math.min(marqueeState.startY, currentY);
+    const width = Math.abs(currentX - marqueeState.startX);
+    const height = Math.abs(currentY - marqueeState.startY);
+    marqueeState.box.style.left = x + 'px';
+    marqueeState.box.style.top = y + 'px';
+    marqueeState.box.style.width = width + 'px';
+    marqueeState.box.style.height = height + 'px';
+}
 
-  updatePreviewAndCode();
-  document.removeEventListener('mousemove', onDragMove);
-  document.removeEventListener('mouseup', onDragEnd);
-  dragState = null;
+function onMarqueeEnd(e) {
+    if (!marqueeState) return;
+    const marqueeRect = marqueeState.box.getBoundingClientRect();
+    const newSelection = [];
+    layerOrder.forEach(item => {
+        if (item.isLocked || !item.isVisible) return;
+        const el = item.previewImg || item.previewElement;
+        if (!el) return;
+        const elRect = el.getBoundingClientRect();
+        const intersects = !(marqueeRect.right < elRect.left || marqueeRect.left > elRect.right || marqueeRect.bottom < elRect.top || marqueeRect.top > elRect.bottom);
+        if (intersects) {
+            newSelection.push(item);
+        }
+    });
+    selectionList = newSelection;
+    renderLayers();
+    highlightPreview();
+    updateAlignmentToolbarVisibility();
+    previewArea.removeChild(marqueeState.box);
+    document.removeEventListener('mousemove', onMarqueeMove);
+    document.removeEventListener('mouseup', onMarqueeEnd);
+    marqueeState = null;
 }

@@ -12,9 +12,12 @@ function initIsiScroll() {
   const scrollDiv = document.getElementById('scroll_tj');
   if (!scrollDiv) return;
 
+  // Clear any existing scroll intervals to prevent duplicates
+  if (window.isiScrollInterval) clearInterval(window.isiScrollInterval);
+  if (window.isiScrollStartTimeout) clearTimeout(window.isiScrollStartTimeout);
+
   let ScrollRate = 125;
   let ReachedMaxScroll = false;
-  let ScrollInterval = null;
   let PreviousScrollTop = 0;
   let scrollStarted = false;
 
@@ -22,12 +25,13 @@ function initIsiScroll() {
     ReachedMaxScroll = false;
     scrollDiv.scrollTop = 0;
     PreviousScrollTop = 0;
-    setTimeout(startScroll, getTotalDuration() * 1000);
+    const totalDuration = getTotalDuration();
+    window.isiScrollStartTimeout = setTimeout(startScroll, totalDuration * 1000);
   }
 
   function startScroll() {
     scrollStarted = true;
-    ScrollInterval = setInterval(scrollStep, ScrollRate);
+    window.isiScrollInterval = setInterval(scrollStep, ScrollRate);
   }
 
   function scrollStep() {
@@ -35,28 +39,34 @@ function initIsiScroll() {
       scrollDiv.scrollTop = PreviousScrollTop;
       PreviousScrollTop++;
       ReachedMaxScroll = scrollDiv.scrollTop >= (scrollDiv.scrollHeight - scrollDiv.offsetHeight);
+    } else {
+        clearInterval(window.isiScrollInterval);
     }
   }
 
   function pauseDiv() {
-    clearInterval(ScrollInterval);
+    clearInterval(window.isiScrollInterval);
   }
 
   function resumeDiv() {
     PreviousScrollTop = scrollDiv.scrollTop;
-    ScrollInterval = setInterval(scrollStep, ScrollRate);
+    window.isiScrollInterval = setInterval(scrollStep, ScrollRate);
   }
 
   function getTotalDuration() {
-    let max = 0;
-    imageList.forEach(img => {
-      if (!img.src) return;
-      max = Math.max(max, img.delay + 1);
-      img.extraAnims.forEach(anim => {
-        max = Math.max(max, anim.delay + 1);
-      });
+    let totalDuration = 0;
+    layerOrder.forEach(item => {
+        if (!item.isVisible) return;
+        item.animationSteps.forEach(step => {
+            // Calculate duration considering repeats and repeat delays
+            let stepDuration = step.duration * (step.advanced.repeat + 1) + (step.advanced.repeat * step.advanced.repeatDelay);
+            let endTime = step.delay + stepDuration;
+            if (totalDuration < endTime) {
+                totalDuration = endTime;
+            }
+        });
     });
-    return max;
+    return totalDuration;
   }
 
   scrollDiv.onmouseover = () => scrollStarted ? pauseDiv() : null;
