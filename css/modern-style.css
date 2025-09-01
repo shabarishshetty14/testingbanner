@@ -1,0 +1,909 @@
+/* =============================================
+   MODERN STYLE FOR BANNERCRAFT
+   ============================================= */
+
+/* -----------------------------
+   1. Theme & Variables
+------------------------------ */
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+
+  /* Light Theme */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-primary: #e5e7eb;
+  --accent-primary: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-danger: #ef4444;
+  --accent-danger-hover: #dc2626;
+  --preview-bg: #ffffff;
+  --code-bg: #1e1e1e;
+  --code-text: #f1f1f1;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme (Very Dark) */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-primary: #374151;
+  --preview-bg: #1f2937;
+}
+
+/* -----------------------------
+   2. Base & Reset
+------------------------------ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+}
+h1 {
+  font-size: 20px;
+}
+h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* -----------------------------
+   3. Main Layout
+------------------------------ */
+#app-container {
+  display: flex;
+  position: relative; /* This is needed to position the button correctly */
+  width: 100%;
+  height: 100vh;
+}
+
+#leftPanel {
+  width: 350px;
+  height: 100vh;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-primary);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+#leftPanel.collapsed {
+  width: 50px;
+}
+
+#leftPanel.collapsed .panel-content,
+#leftPanel.collapsed .panel-header .header-row {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s 0.3s, opacity 0.2s ease;
+}
+
+#rightPanel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 0;
+}
+
+/* -----------------------------
+   4. Left Panel Styling
+------------------------------ */
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.panel-toggle-btn-corner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+.logo-area h1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.logo-img {
+  height: 24px;
+  flex-shrink: 0;
+}
+.panel-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 100%;
+}
+.panel-header-controls button {
+  flex-grow: 1;
+}
+.panel-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex-grow: 1;
+  transition: opacity 0.3s ease, visibility 0s 0.3s;
+}
+
+/* -----------------------------
+   5. Right Panel Styling
+------------------------------ */
+.preview-fixed {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--bg-secondary);
+  z-index: 10;
+}
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+#durationDisplay {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+#previewArea {
+  background-color: var(--preview-bg);
+  border: 1px dashed var(--border-primary);
+  margin: 0 auto 16px auto;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] #previewArea {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.asset-controls {
+  padding: 24px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+#controls > div {
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--bg-secondary);
+}
+
+/* -----------------------------
+   6. Form Controls & Buttons
+------------------------------ */
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+input[type="number"],
+input[type="file"],
+input[type="text"],
+input[type="color"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 8px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.banner-size-controls .input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.banner-size-controls .input-group span {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.banner-size-controls input[type="number"] {
+  width: 80px;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  background-color: var(--accent-primary);
+  color: white;
+}
+button:hover {
+  background-color: var(--accent-hover);
+}
+button:active {
+  transform: scale(0.98);
+}
+
+.icon-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.icon-btn:hover {
+  background-color: var(--border-primary);
+  color: var(--text-primary);
+}
+.icon-btn:disabled {
+  color: var(--border-primary);
+  cursor: not-allowed;
+  background: transparent !important;
+}
+
+#copyCodeBtn,
+#downloadJsonBtn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.add-buttons {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+button.removeAnim,
+button.removeText {
+  background-color: var(--accent-danger);
+}
+button.removeAnim:hover,
+button.removeText:hover {
+  background-color: var(--accent-danger-hover);
+}
+
+.checkbox-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.checkbox-control input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-primary);
+}
+
+/* -----------------------------
+   7. Code & Preview
+------------------------------ */
+pre {
+  background-color: var(--code-bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+pre code {
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--code-text);
+  white-space: pre-wrap;
+}
+
+.preview,
+.preview-text {
+  position: absolute;
+  cursor: move;
+  outline: 1px dashed transparent;
+  transition: outline-color 0.2s ease;
+}
+.preview.highlighted,
+.preview-text.highlighted {
+  outline: 2px solid var(--accent-primary);
+  z-index: 100;
+}
+.preview-label {
+  position: absolute;
+  background: var(--accent-primary);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+  transform: translateY(-110%);
+}
+
+/* -----------------------------
+   8. Scrollbars
+------------------------------ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-primary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-secondary);
+}
+
+/* -----------------------------
+   9. Layers Panel
+------------------------------ */
+.layers-panel {
+  margin-bottom: 24px;
+}
+#layers-container {
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+}
+#layers-container.empty {
+  padding: 24px;
+  text-align: center;
+}
+#layers-container.empty p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-primary);
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+.layer-item:last-child {
+  border-bottom: none;
+}
+.layer-item:hover {
+  background-color: var(--border-primary);
+}
+.layer-item.selected {
+  background-color: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+.layer-item.selected .layer-name {
+  color: white;
+}
+.layer-item.selected .layer-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+.layer-icon {
+  color: var(--text-secondary);
+  width: 16px;
+  text-align: center;
+}
+.layer-name {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.layer-item.dragging {
+  opacity: 0.5;
+}
+.layer-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-primary);
+}
+.layer-item:hover .layer-controls {
+  background-color: var(--border-primary);
+}
+.layer-item.selected .layer-controls {
+  background-color: var(--accent-primary);
+}
+.layer-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.layer-btn.inactive {
+  color: var(--border-primary);
+}
+.layer-item.selected .layer-btn.inactive {
+  color: rgba(255, 255, 255, 0.4);
+}
+.layer-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+.layer-item.selected .layer-btn:hover,
+.layer-item.selected .duplicate-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.layer-thumb, .layer-thumb-placeholder {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background-color: var(--border-primary);
+    object-fit: cover;
+}
+
+.layer-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.layer-name-input {
+    flex-grow: 1;
+    padding: 2px 4px;
+    margin: -2px -4px; /* Counteract padding to maintain size */
+    border: 1px solid var(--accent-primary);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.layer-name-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+/* -----------------------------
+   10. Marquee Selection Box
+------------------------------ */
+.marquee-box {
+  position: absolute;
+  border: 1px solid var(--accent-primary);
+  background-color: rgba(59, 130, 246, 0.2);
+  pointer-events: none;
+  z-index: 2000;
+}
+
+/* -----------------------------
+   11. Alignment Toolbar
+------------------------------ */
+.alignment-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 0;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+}
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.alignment-toolbar button {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 0;
+  border-left: 1px solid var(--border-primary);
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1;
+}
+.alignment-toolbar button:first-child {
+  border-left: none;
+}
+.alignment-toolbar button:hover {
+  background-color: var(--border-primary);
+  color: var(--text-primary);
+}
+.alignment-toolbar button:disabled {
+  color: var(--border-primary);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* -----------------------------
+   12. Toggle Switch for Toolbar
+------------------------------ */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 60px;
+  height: 30px;
+  margin: 0 8px;
+  cursor: pointer;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-switch .slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-primary);
+  border-radius: 34px;
+  transition: 0.4s;
+}
+.toggle-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+.toggle-switch input:checked + .slider {
+  background-color: var(--accent-primary);
+}
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.toggle-switch i {
+  position: absolute;
+  right: -24px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.toggle-switch input:checked ~ i {
+  color: var(--accent-primary);
+}
+
+/* -----------------------------
+   13. Context Menu
+------------------------------ */
+.context-menu {
+  position: fixed;
+  z-index: 3000;
+  width: 200px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .context-menu {
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+.context-menu ul {
+  list-style: none;
+  padding: 6px;
+  margin: 0;
+}
+.context-menu ul li {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.context-menu ul li:hover {
+  background-color: var(--accent-primary);
+  color: white;
+}
+.context-menu ul li i {
+  width: 28px;
+  text-align: center;
+  margin-right: 4px;
+  opacity: 0.7;
+}
+.context-menu ul li:hover i {
+  opacity: 1;
+}
+.context-menu ul li.separator {
+  height: 1px;
+  background-color: var(--border-primary);
+  margin: 6px 0;
+  padding: 0;
+}
+
+.dimension-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.dimension-controls label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+}
+
+.dimension-controls input[type="number"] {
+    width: 70px;
+    margin: 0;
+}
+
+.aspect-ratio-lock {
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    background-color: transparent;
+    border: 1px solid var(--border-primary);
+    color: var(--text-secondary);
+}
+
+.aspect-ratio-lock.active {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.aspect-ratio-lock.active:hover {
+    background-color: var(--accent-hover);
+}
+
+/* -----------------------------
+   14. Image Overlay
+------------------------------ */
+.image-overlay-controls {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-primary);
+}
+
+#previewArea {
+    position: relative; /* Ensure it's a positioning context for the overlay */
+}
+
+#trace-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none; /* Make sure you can click through it */
+    z-index: 50; /* Above the background but below the elements */
+}
+
+/* -----------------------------
+   15. Collapsible Asset Blocks
+------------------------------ */
+.asset-block {
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    overflow: hidden; /* Important for hiding content */
+}
+
+.asset-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.asset-header strong {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.asset-header .collapse-btn i {
+    transition: transform 0.2s ease-in-out;
+}
+
+.asset-block.collapsed .asset-header .collapse-btn i {
+    transform: rotate(180deg);
+}
+
+.asset-content {
+    padding: 0 16px 16px 16px;
+    border-top: 1px solid var(--border-primary);
+    display: block;
+}
+
+.asset-block.collapsed .asset-content {
+    display: none;
+}
+
+/* -----------------------------
+   16. Animation Steps UI
+------------------------------ */
+.animation-steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.animation-step {
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 12px;
+    background-color: var(--bg-primary);
+}
+
+.step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.step-header strong {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.step-header .remove-btn {
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+.step-header .remove-btn:hover {
+    background-color: var(--accent-danger);
+    border-color: var(--accent-danger);
+    color: white;
+}
+
+.step-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+}
+
+.step-grid-full {
+    grid-column: 1 / -1;
+}
+
+.step-state-group {
+    border: 1px dashed var(--border-primary);
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 4px;
+}
+
+.step-state-group strong {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.step-advanced-options {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-primary);
+}
+
+/* -----------------------------
+   17. Panel Toggle Button Fix
+------------------------------ */
+#toggleLeftPanel {
+  position: absolute;
+  top: 50%;
+  /* Start position matches the initial width of #leftPanel */
+  left: 350px; 
+  transform: translateY(-50%);
+  z-index: 100;
+
+  /* Visual styles to make the button visible */
+  width: 24px;
+  height: 48px;
+  padding: 0;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  
+  /* Smooth transition */
+  transition: left 0.3s ease;
+
+  /* Center the icon inside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#leftPanel.collapsed + #toggleLeftPanel {
+  /* New position matches the collapsed width of #leftPanel */
+  left: 50px; 
+}
